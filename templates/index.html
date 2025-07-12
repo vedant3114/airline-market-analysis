@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airline Market Analysis Dashboard</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --light-bg: #f8f9fa;
+            --dark-bg: #343a40;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: rgba(44, 62, 80, 0.95) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            font-weight: 600;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stats-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            border: none;
+            border-radius: 25px;
+            padding: 10px 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            height: 450px;
+            overflow: hidden;
+        }
+        
+        .chart-container h6 {
+            color: #495057;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .heatmap-controls {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .heatmap-controls select {
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 5px 10px;
+            font-size: 12px;
+            background: white;
+        }
+        
+        .heatmap-controls select:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+
+        .insights-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .table thead th {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+
+        .badge {
+            border-radius: 20px;
+            padding: 8px 15px;
+            font-weight: 600;
+        }
+
+        .recommendation-item {
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .recommendation-item.priority-high {
+            background-color: #fff3cd;
+            border-left-color: #ffc107;
+        }
+        
+        .recommendation-item.priority-medium {
+            background-color: #d1ecf1;
+            border-left-color: #17a2b8;
+        }
+        
+        .recommendation-item.priority-low {
+            background-color: #d4edda;
+            border-left-color: #28a745;
+        }
+        
+        .ai-analysis-section {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .ai-analysis-section h6 {
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .insights-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .insights-card h5 {
+            color: white;
+            margin-bottom: 15px;
+        }
+        
+        .debug-info {
+            background-color: #e9ecef;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .heatmap-insights-panel {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .heatmap-insights-panel h6 {
+            color: #495057;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .heatmap-insights-panel strong {
+            color: #007bff;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .stats-number {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-plane-departure me-2"></i>
+                Airline Market Analysis
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#analysis">Analysis</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#insights">Insights</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="main-container p-4">
+            <!-- Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h1 class="text-center mb-3">
+                        <i class="fas fa-chart-line text-primary me-2"></i>
+                        Airline Booking Market Analysis
+                    </h1>
+                    <p class="text-center text-muted">
+                        Comprehensive analysis of airline booking demand trends and market insights
+                    </p>
+                </div>
+            </div>
+
+            <!-- Search Form -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-search me-2"></i>
+                        Search Flight Data
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="searchForm">
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label for="origin" class="form-label">Origin Airport</label>
+                                <select class="form-select" id="origin" required>
+                                    <option value="SYD">SYD - Sydney</option>
+                                    <option value="MEL">MEL - Melbourne</option>
+                                    <option value="BNE">BNE - Brisbane</option>
+                                    <option value="PER">PER - Perth</option>
+                                    <option value="ADL">ADL - Adelaide</option>
+                                    <option value="CBR">CBR - Canberra</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="destination" class="form-label">Destination Airport</label>
+                                <select class="form-select" id="destination" required>
+                                    <option value="MEL">MEL - Melbourne</option>
+                                    <option value="SYD">SYD - Sydney</option>
+                                    <option value="BNE">BNE - Brisbane</option>
+                                    <option value="PER">PER - Perth</option>
+                                    <option value="ADL">ADL - Adelaide</option>
+                                    <option value="CBR">CBR - Canberra</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="dateFrom" class="form-label">From Date</label>
+                                <input type="date" class="form-control" id="dateFrom" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="dateTo" class="form-label">To Date</label>
+                                <input type="date" class="form-control" id="dateTo" required>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-search me-2"></i>
+                                Analyze Market Data
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-lg ms-2" onclick="testInsights()">
+                                <i class="fas fa-bug me-2"></i>
+                                Test Insights
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div id="loading" class="loading">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3">Analyzing market data...</p>
+            </div>
+
+            <!-- Results Section -->
+            <div id="results" style="display: none;">
+                <!-- Summary Stats -->
+                <div class="row mb-4" id="summaryStats">
+                    <!-- Stats will be populated here -->
+                </div>
+
+                <!-- Charts Section -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-bar me-2"></i>
+                                    Market Analysis Charts
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="chart-container">
+                                            <h6>Price Trends</h6>
+                                            <div id="priceTrendChart"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="chart-container">
+                                            <h6>Airline Distribution</h6>
+                                            <div id="airlineChart"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="chart-container">
+                                            <h6>Route Popularity</h6>
+                                            <div id="routeChart"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="chart-container">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <h6>Demand Heatmap</h6>
+                                                <select id="heatmapViewSelector" class="form-select form-select-sm" style="width: auto;" onchange="changeHeatmapView()">
+                                                    <option value="flight_count">Flight Count</option>
+                                                    <option value="price_heatmap">Price Analysis</option>
+                                                    <option value="demand_score">Demand Score</option>
+                                                    <option value="route_airline">Route vs Airline</option>
+                                                    <option value="route_day_price">Route vs Day Price</option>
+                                                    <option value="weekend_analysis">Weekend Analysis</option>
+                                                </select>
+                                            </div>
+                                            <div id="heatmapChart"></div>
+                                            <div id="heatmapInsights" class="mt-3" style="display: none;">
+                                                <!-- Heatmap insights will be displayed here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Insights Section -->
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-lightbulb me-2"></i>
+                                    Market Insights & Recommendations
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="insightsContent">
+                                    <!-- Insights will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-robot me-2"></i>
+                                    AI Analysis
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="aiAnalysis">
+                                    <!-- AI analysis will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Table -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-table me-2"></i>
+                                    Flight Data
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="flightTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Flight</th>
+                                                <th>Airline</th>
+                                                <th>Route</th>
+                                                <th>Date</th>
+                                                <th>Time</th>
+                                                <th>Price</th>
+                                                <th>Demand</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="flightTableBody">
+                                            <!-- Data will be populated here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        // Set default dates
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+            const nextMonth = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+            
+            document.getElementById('dateFrom').value = nextWeek.toISOString().split('T')[0];
+            document.getElementById('dateTo').value = nextMonth.toISOString().split('T')[0];
+            
+            // Load initial charts
+            loadSampleCharts();
+        });
+
+        // Form submission
+        document.getElementById('searchForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            fetchFlightData();
+        });
+
+        function fetchFlightData() {
+            const formData = {
+                origin: document.getElementById('origin').value,
+                destination: document.getElementById('destination').value,
+                date_from: document.getElementById('dateFrom').value,
+                date_to: document.getElementById('dateTo').value
+            };
+
+            showLoading(true);
+
+            fetch('/api/fetch-data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                showLoading(false);
+                if (data.success) {
+                    displayResults(data);
+                } else {
+                    showError(data.error || 'Failed to fetch data');
+                }
+            })
+            .catch(error => {
+                showLoading(false);
+                console.error('Fetch error:', error);
+                if (error.message.includes('JSON')) {
+                    showError('Invalid data received from server. Please try again.');
+                } else {
+                    showError('Network error: ' + error.message);
+                }
+            });
+        }
+
+        function displayResults(data) {
+            document.getElementById('results').style.display = 'block';
+            
+            // Display summary stats
+            displaySummaryStats(data.summary);
+            
+            // Display insights
+            displayInsights(data.insights);
+            
+            // Display flight data table
+            displayFlightTable(data.data);
+            
+            // Load charts
+            loadCharts();
+        }
+
+        function displaySummaryStats(summary) {
+            const statsContainer = document.getElementById('summaryStats');
+            statsContainer.innerHTML = `
+                <div class="col-md-3 mb-3">
+                    <div class="stats-card text-center">
+                        <div class="stats-number">${summary.total_flights}</div>
+                        <div class="stats-label">Total Flights</div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="stats-card text-center">
+                        <div class="stats-number">$${summary.avg_price}</div>
+                        <div class="stats-label">Average Price</div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="stats-card text-center">
+                        <div class="stats-number">${summary.price_range}</div>
+                        <div class="stats-label">Price Range</div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="stats-card text-center">
+                        <div class="stats-number">${Object.keys(summary.popular_airlines).length}</div>
+                        <div class="stats-label">Airlines</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function displayInsights(insights) {
+            const insightsContainer = document.getElementById('insightsContent');
+            
+            console.log('Displaying insights:', insights); // Debug log
+            
+            let insightsHTML = '<div class="row">';
+            
+            // Price insights
+            if (insights.price_insights && Object.keys(insights.price_insights).length > 0) {
+                insightsHTML += `
+                    <div class="col-md-6 mb-3">
+                        <h6><i class="fas fa-dollar-sign text-success me-2"></i>Price Insights</h6>
+                        <ul class="list-unstyled">
+                `;
+                
+                if (insights.price_insights.expensive_days && Object.keys(insights.price_insights.expensive_days).length > 0) {
+                    insightsHTML += `<li><strong>Most Expensive Days:</strong> ${Object.keys(insights.price_insights.expensive_days).join(', ')}</li>`;
+                }
+                
+                if (insights.price_insights.cheapest_days && Object.keys(insights.price_insights.cheapest_days).length > 0) {
+                    insightsHTML += `<li><strong>Cheapest Days:</strong> ${Object.keys(insights.price_insights.cheapest_days).join(', ')}</li>`;
+                }
+                
+                if (insights.price_insights.airline_pricing && Object.keys(insights.price_insights.airline_pricing).length > 0) {
+                    const cheapest_airline = Object.entries(insights.price_insights.airline_pricing)
+                        .sort((a, b) => a[1].mean - b[1].mean)[0];
+                    if (cheapest_airline) {
+                        insightsHTML += `<li><strong>Best Value Airline:</strong> ${cheapest_airline[0]} ($${cheapest_airline[1].mean})</li>`;
+                    }
+                }
+                
+                insightsHTML += `
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            // Demand insights
+            if (insights.demand_insights && Object.keys(insights.demand_insights).length > 0) {
+                insightsHTML += `
+                    <div class="col-md-6 mb-3">
+                        <h6><i class="fas fa-users text-primary me-2"></i>Demand Insights</h6>
+                        <ul class="list-unstyled">
+                `;
+                
+                if (insights.demand_insights.busiest_days && Object.keys(insights.demand_insights.busiest_days).length > 0) {
+                    insightsHTML += `<li><strong>Busiest Days:</strong> ${Object.keys(insights.demand_insights.busiest_days).join(', ')}</li>`;
+                }
+                
+                if (insights.demand_insights.weekend_ratio !== undefined) {
+                    insightsHTML += `<li><strong>Weekend Ratio:</strong> ${(insights.demand_insights.weekend_ratio * 100).toFixed(1)}%</li>`;
+                }
+                
+                if (insights.demand_insights.airline_popularity && Object.keys(insights.demand_insights.airline_popularity).length > 0) {
+                    const most_popular = Object.entries(insights.demand_insights.airline_popularity)
+                        .sort((a, b) => b[1] - a[1])[0];
+                    if (most_popular) {
+                        insightsHTML += `<li><strong>Most Popular Airline:</strong> ${most_popular[0]} (${most_popular[1]} flights)</li>`;
+                    }
+                }
+                
+                insightsHTML += `
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            insightsHTML += '</div>';
+            
+            // Recommendations
+            if (insights.recommendations && insights.recommendations.length > 0) {
+                insightsHTML += '<h6 class="mt-3"><i class="fas fa-lightbulb text-warning me-2"></i>Recommendations</h6>';
+                insightsHTML += '<div class="row">';
+                insights.recommendations.forEach(rec => {
+                    insightsHTML += `
+                        <div class="col-12 mb-2">
+                            <div class="recommendation-item priority-${rec.priority}">
+                                <h6 class="mb-1">${rec.title}</h6>
+                                <p class="mb-0 small">${rec.description}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                insightsHTML += '</div>';
+            } else {
+                insightsHTML += '<div class="alert alert-info mt-3"><i class="fas fa-info-circle me-2"></i>No specific recommendations available for this data set.</div>';
+            }
+            
+            insightsContainer.innerHTML = insightsHTML;
+            
+            // AI Analysis
+            if (insights.ai_analysis) {
+                displayAIAnalysis(insights.ai_analysis);
+            } else {
+                console.log('No AI analysis found in insights'); // Debug log
+                const aiContainer = document.getElementById('aiAnalysis');
+                aiContainer.innerHTML = '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>AI analysis not available</div>';
+            }
+        }
+
+        function displayAIAnalysis(aiAnalysis) {
+            const aiContainer = document.getElementById('aiAnalysis');
+            console.log('Displaying AI analysis:', aiAnalysis); // Debug log
+            
+            let aiHTML = '';
+            
+            // Market Trends
+            if (aiAnalysis.trends) {
+                aiHTML += '<h6><i class="fas fa-chart-line text-primary me-2"></i>Market Trends</h6>';
+                if (aiAnalysis.trends.market_growth) {
+                    aiHTML += `<p class="small mb-2"><strong>Growth:</strong> ${aiAnalysis.trends.market_growth}</p>`;
+                }
+                if (aiAnalysis.trends.seasonal_patterns) {
+                    aiHTML += `<p class="small mb-2"><strong>Seasonal:</strong> ${aiAnalysis.trends.seasonal_patterns}</p>`;
+                }
+                if (aiAnalysis.trends.price_volatility) {
+                    aiHTML += `<p class="small mb-2"><strong>Pricing:</strong> ${aiAnalysis.trends.price_volatility}</p>`;
+                }
+            }
+            
+            // Pricing Insights
+            if (aiAnalysis.pricing) {
+                aiHTML += '<h6 class="mt-3"><i class="fas fa-dollar-sign text-success me-2"></i>Pricing Analysis</h6>';
+                if (aiAnalysis.pricing.average_price) {
+                    aiHTML += `<p class="small mb-1"><strong>Average Price:</strong> ${aiAnalysis.pricing.average_price}</p>`;
+                }
+                if (aiAnalysis.pricing.pricing_strategy) {
+                    aiHTML += `<p class="small mb-2">${aiAnalysis.pricing.pricing_strategy}</p>`;
+                }
+            }
+            
+            // Demand Analysis
+            if (aiAnalysis.demand) {
+                aiHTML += '<h6 class="mt-3"><i class="fas fa-users text-info me-2"></i>Demand Analysis</h6>';
+                if (aiAnalysis.demand.peak_periods) {
+                    aiHTML += `<p class="small mb-1">${aiAnalysis.demand.peak_periods}</p>`;
+                }
+                if (aiAnalysis.demand.popular_routes) {
+                    aiHTML += `<p class="small mb-2"><strong>Popular Routes:</strong> ${aiAnalysis.demand.popular_routes}</p>`;
+                }
+            }
+            
+            // Strategic Recommendations
+            if (aiAnalysis.recommendations && aiAnalysis.recommendations.length > 0) {
+                aiHTML += '<h6 class="mt-3"><i class="fas fa-lightbulb text-warning me-2"></i>Strategic Recommendations</h6>';
+                aiHTML += '<ul class="small">';
+                aiAnalysis.recommendations.slice(0, 4).forEach(rec => { // Show first 4 recommendations
+                    aiHTML += `<li class="mb-1">${rec}</li>`;
+                });
+                aiHTML += '</ul>';
+            }
+            
+            // Risk Factors
+            if (aiAnalysis.risks && aiAnalysis.risks.length > 0) {
+                aiHTML += '<h6 class="mt-3"><i class="fas fa-exclamation-triangle text-danger me-2"></i>Risk Factors</h6>';
+                aiHTML += '<ul class="small">';
+                aiAnalysis.risks.slice(0, 3).forEach(risk => { // Show first 3 risks
+                    aiHTML += `<li class="mb-1">${risk}</li>`;
+                });
+                aiHTML += '</ul>';
+            }
+            
+            // Market Opportunities
+            if (aiAnalysis.market_opportunities && aiAnalysis.market_opportunities.length > 0) {
+                aiHTML += '<h6 class="mt-3"><i class="fas fa-rocket text-success me-2"></i>Market Opportunities</h6>';
+                aiHTML += '<ul class="small">';
+                aiAnalysis.market_opportunities.slice(0, 3).forEach(opp => { // Show first 3 opportunities
+                    aiHTML += `<li class="mb-1">${opp}</li>`;
+                });
+                aiHTML += '</ul>';
+            }
+            
+            // Competitive Analysis
+            if (aiAnalysis.competitive_analysis && aiAnalysis.competitive_analysis.market_leaders) {
+                aiHTML += '<h6 class="mt-3"><i class="fas fa-trophy text-warning me-2"></i>Competitive Landscape</h6>';
+                const leaders = aiAnalysis.competitive_analysis.market_leaders;
+                Object.entries(leaders).slice(0, 2).forEach(([airline, description]) => {
+                    aiHTML += `<p class="small mb-1"><strong>${airline}:</strong> ${description}</p>`;
+                });
+            }
+            
+            if (aiHTML === '') {
+                aiHTML = '<div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>AI analysis is being generated...</div>';
+            }
+            
+            aiContainer.innerHTML = aiHTML;
+        }
+
+        function displayFlightTable(flights) {
+            const tableBody = document.getElementById('flightTableBody');
+            
+            let tableHTML = '';
+            flights.slice(0, 20).forEach(flight => { // Show first 20 flights
+                tableHTML += `
+                    <tr>
+                        <td><strong>${flight.flight_number}</strong></td>
+                        <td>${flight.airline}</td>
+                        <td><span class="badge bg-primary">${flight.route}</span></td>
+                        <td>${new Date(flight.date).toLocaleDateString()}</td>
+                        <td>${new Date(flight.departure_time).toLocaleTimeString()}</td>
+                        <td><strong>$${flight.price}</strong></td>
+                        <td>
+                            <span class="badge bg-${flight.demand_score > 1.2 ? 'success' : flight.demand_score > 0.8 ? 'warning' : 'secondary'}">
+                                ${flight.demand_score}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableBody.innerHTML = tableHTML;
+        }
+
+        function loadCharts() {
+            // Load different chart types
+            const chartTypes = ['price_trend', 'airline_distribution', 'route_popularity', 'demand_heatmap'];
+            
+            chartTypes.forEach((chartType, index) => {
+                setTimeout(() => {
+                    loadChart(chartType);
+                }, index * 500);
+            });
+        }
+
+        function loadChart(chartType) {
+            const requestData = { chart_type: chartType };
+            
+            // Add heatmap view if it's a heatmap chart
+            if (chartType === 'demand_heatmap') {
+                const heatmapView = document.getElementById('heatmapViewSelector').value;
+                requestData.heatmap_view = heatmapView;
+            }
+            
+            fetch('/api/charts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const chartDiv = getChartDiv(chartType);
+                    if (chartDiv) {
+                        try {
+                            const chartData = JSON.parse(data.chart);
+                            Plotly.newPlot(chartDiv, chartData);
+                            
+                            // Update heatmap view selector if available views are provided
+                            if (data.heatmap_views && chartType === 'demand_heatmap') {
+                                updateHeatmapViewSelector(data.heatmap_views, data.current_view);
+                            }
+                        } catch (parseError) {
+                            console.error('Error parsing chart data:', parseError);
+                            console.log('Raw chart data:', data.chart);
+                            chartDiv.innerHTML = '<div class="alert alert-warning">Error loading chart data</div>';
+                        }
+                    }
+                } else {
+                    console.error('Chart API error:', data.error);
+                    const chartDiv = getChartDiv(chartType);
+                    if (chartDiv) {
+                        chartDiv.innerHTML = '<div class="alert alert-danger">Failed to load chart</div>';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error loading chart:', error);
+                const chartDiv = getChartDiv(chartType);
+                if (chartDiv) {
+                    chartDiv.innerHTML = '<div class="alert alert-danger">Network error loading chart</div>';
+                }
+            });
+        }
+
+        function changeHeatmapView() {
+            const heatmapView = document.getElementById('heatmapViewSelector').value;
+            console.log('Changing heatmap view to:', heatmapView);
+            
+            // Reload the heatmap chart with the new view
+            loadChart('demand_heatmap');
+            
+            // Load heatmap insights
+            loadHeatmapInsights();
+        }
+
+        function updateHeatmapViewSelector(availableViews, currentView) {
+            const selector = document.getElementById('heatmapViewSelector');
+            if (!selector) return;
+            
+            // Clear existing options
+            selector.innerHTML = '';
+            
+            // Add available views
+            const viewLabels = {
+                'flight_count': 'Flight Count',
+                'price_heatmap': 'Price Analysis', 
+                'demand_score': 'Demand Score',
+                'route_airline': 'Route vs Airline',
+                'route_day_price': 'Route vs Day Price',
+                'weekend_analysis': 'Weekend Analysis'
+            };
+            
+            availableViews.forEach(view => {
+                const option = document.createElement('option');
+                option.value = view;
+                option.textContent = viewLabels[view] || view;
+                if (view === currentView) {
+                    option.selected = true;
+                }
+                selector.appendChild(option);
+            });
+        }
+
+        function loadHeatmapInsights() {
+            fetch('/api/heatmap-insights')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayHeatmapInsights(data.heatmap_insights);
+                }
+            })
+            .catch(error => console.error('Error loading heatmap insights:', error));
+        }
+
+        function displayHeatmapInsights(insights) {
+            const insightsContainer = document.getElementById('heatmapInsights');
+            if (!insightsContainer) return;
+            
+            let insightsHTML = '<div class="heatmap-insights-panel">';
+            insightsHTML += '<h6 class="mb-2"><i class="fas fa-chart-area text-primary me-2"></i>Heatmap Analysis</h6>';
+            
+            // Peak Analysis
+            if (insights.peak_analysis) {
+                insightsHTML += `
+                    <div class="mb-2">
+                        <strong>Peak Hours:</strong> ${insights.peak_analysis.peak_hour}:00 (${insights.peak_analysis.peak_flights} flights)<br>
+                        <strong>Peak Day:</strong> ${insights.peak_analysis.peak_day}<br>
+                        <strong>Quietest:</strong> ${insights.peak_analysis.quietest_hour}:00 on ${insights.peak_analysis.quietest_day}
+                    </div>
+                `;
+            }
+            
+            // Price Analysis
+            if (insights.price_analysis) {
+                insightsHTML += `
+                    <div class="mb-2">
+                        <strong>Expensive:</strong> ${insights.price_analysis.expensive_hour}:00 on ${insights.price_analysis.expensive_day} ($${insights.price_analysis.max_avg_price})<br>
+                        <strong>Cheapest:</strong> ${insights.price_analysis.cheapest_hour}:00 on ${insights.price_analysis.cheapest_day} ($${insights.price_analysis.min_avg_price})
+                    </div>
+                `;
+            }
+            
+            // Weekend Analysis
+            if (insights.weekend_analysis) {
+                const weekendRatio = (insights.weekend_analysis.weekend_ratio * 100).toFixed(1);
+                insightsHTML += `
+                    <div class="mb-2">
+                        <strong>Weekend Ratio:</strong> ${weekendRatio}%<br>
+                        <strong>Weekend Premium:</strong> $${insights.weekend_analysis.weekend_avg_price} vs $${insights.weekend_analysis.weekday_avg_price}
+                    </div>
+                `;
+            }
+            
+            // Route-Airline Analysis
+            if (insights.route_airline_analysis && insights.route_airline_analysis.top_combinations) {
+                insightsHTML += '<div class="mb-2"><strong>Top Route-Airline:</strong><br>';
+                insights.route_airline_analysis.top_combinations.slice(0, 3).forEach(combo => {
+                    insightsHTML += `• ${combo.route} (${combo.airline}): ${combo.flights} flights<br>`;
+                });
+                insightsHTML += '</div>';
+            }
+            
+            // Demand Analysis
+            if (insights.demand_analysis) {
+                insightsHTML += `
+                    <div class="mb-2">
+                        <strong>High Demand:</strong> ${insights.demand_analysis.high_demand_hour}:00 on ${insights.demand_analysis.high_demand_day}<br>
+                        <strong>Avg Demand Score:</strong> ${insights.demand_analysis.avg_demand_score}
+                    </div>
+                `;
+            }
+            
+            insightsHTML += '</div>';
+            insightsContainer.innerHTML = insightsHTML;
+            insightsContainer.style.display = 'block';
+        }
+
+        function loadSampleCharts() {
+            // Load sample charts on page load
+            loadCharts();
+            
+            // Load heatmap insights
+            setTimeout(() => {
+                loadHeatmapInsights();
+            }, 2000); // Load after charts are loaded
+        }
+
+        function getChartDiv(chartType) {
+            const chartMap = {
+                'price_trend': 'priceTrendChart',
+                'airline_distribution': 'airlineChart',
+                'route_popularity': 'routeChart',
+                'demand_heatmap': 'heatmapChart'
+            };
+            
+            return document.getElementById(chartMap[chartType]);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+            document.getElementById('results').style.display = show ? 'none' : 'block';
+        }
+
+        function showError(message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+            alertDiv.innerHTML = `
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.querySelector('.main-container').insertBefore(alertDiv, document.querySelector('.main-container').firstChild);
+        }
+
+        function testInsights() {
+            showLoading(true);
+
+            fetch('/api/test-insights')
+            .then(response => response.json())
+            .then(data => {
+                showLoading(false);
+                if (data.success) {
+                    console.log('Test insights response:', data);
+                    
+                    // Display debug info
+                    const debugInfo = `
+                        <div class="debug-info">
+                            <strong>Debug Info:</strong><br>
+                            Data shape: ${data.data_shape}<br>
+                            AI analysis present: ${data.ai_analysis_present}<br>
+                            AI analysis keys: ${data.ai_analysis_keys.join(', ')}<br>
+                            Insights keys: ${Object.keys(data.insights).join(', ')}
+                        </div>
+                    `;
+                    
+                    // Add debug info to the page
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.style.display = 'block';
+                    resultsDiv.insertAdjacentHTML('afterbegin', debugInfo);
+                    
+                    // Display the insights
+                    displayInsights(data.insights);
+                    
+                    // Show success message
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                    alertDiv.innerHTML = `
+                        <i class="fas fa-check-circle me-2"></i>
+                        Test insights generated successfully! Check console for detailed debug info.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+                    document.querySelector('.main-container').insertBefore(alertDiv, document.querySelector('.main-container').firstChild);
+                } else {
+                    showError(data.error || 'Failed to generate test insights');
+                }
+            })
+            .catch(error => {
+                showLoading(false);
+                showError('Network error: ' + error.message);
+            });
+        }
+    </script>
+</body>
+</html> 
